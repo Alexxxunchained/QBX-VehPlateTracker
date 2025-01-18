@@ -2,8 +2,6 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local trackedVehicles = {}
 local policeTrackedVehicles = {}
 
--- 按照车牌号获取车辆信息并且记录
--- Function to get vehicle by plate
 local function GetVehicleByPlate(plate)
     local vehicles = GetGamePool('CVehicle')
     for _, vehicle in ipairs(vehicles) do
@@ -17,8 +15,6 @@ local function GetVehicleByPlate(plate)
     return nil
 end
 
--- 创建blip
--- Helper function to create vehicle blip
 local function CreateVehicleBlip(vehicle, plate, isPoliceTracker)
     local blip = AddBlipForEntity(vehicle)
     SetBlipSprite(blip, 326) -- Car blip sprite
@@ -30,8 +26,8 @@ local function CreateVehicleBlip(vehicle, plate, isPoliceTracker)
     return blip
 end
 
--- 绘制标记
--- Draw marker above vehicle
+-- 绘制标部分，如果占用率较高可以考虑删除这部分
+-- Draw marker above vehicle, if performance is a problem, you can consider removing this part
 local function DrawTrackerMarker(coords, isPoliceTracker)
     local markerColor = isPoliceTracker and Config.PoliceMarkerColor or Config.NormalMarkerColor
     DrawMarker(
@@ -58,8 +54,6 @@ local function DrawTrackerMarker(coords, isPoliceTracker)
     )
 end
 
--- 取消追踪
--- Remove tracking after timeout
 local function RemoveTracking(plate, isPoliceTracker)
     local vehicleList = isPoliceTracker and policeTrackedVehicles or trackedVehicles
     if vehicleList[plate] then
@@ -70,24 +64,20 @@ local function RemoveTracking(plate, isPoliceTracker)
         end
         lib.notify({
             title = '车辆追踪器',
-            description = '对该车辆:' .. plate .. '的追踪已失灵',
+            description = '追踪车辆:' .. plate .. '已丢失',
             type = 'inform'
         })
     end
 end
 
--- 追踪车辆
--- Track vehicle function
 local function TrackVehicle(plate, isPoliceTracker)
     local vehicleList = isPoliceTracker and policeTrackedVehicles or trackedVehicles
     local maxVehicles = isPoliceTracker and Config.MaxPoliceTrackedVehicles or Config.MaxTrackedVehicles
 
-    -- 检查是否达到追踪上限
-    -- Check if maximum tracked vehicles reached
     if #vehicleList >= maxVehicles then
         lib.notify({
             title = '车辆追踪器', -- 'Vehicle Tracker'
-            description = '已达最大追踪车辆上限',  -- 'Maximum tracked vehicles reached'
+            description = '达到追踪上限', -- 'Reached maximum tracked vehicles'
             type = 'error'
         })
         return false
@@ -96,15 +86,13 @@ local function TrackVehicle(plate, isPoliceTracker)
     local vehicle = GetVehicleByPlate(plate)
     if not vehicle then
         lib.notify({
-            title = '车辆追踪器',  -- 'Vehicle Tracker'
-            description = '雷达卫星未检测到该车辆',  -- 'Radar satellite did not detect the vehicle'
+            title = '车辆追踪器', -- 'Vehicle Tracker'
+            description = '雷达卫星未检测到车辆', -- 'Radar satellite did not detect vehicle'
             type = 'error'
         })
         return false
     end
 
-    -- 创建blip并存储信息
-    -- Create blip and store tracking info
     local blip = CreateVehicleBlip(vehicle, plate, isPoliceTracker)
     vehicleList[plate] = {
         blip = blip,
@@ -118,7 +106,7 @@ local function TrackVehicle(plate, isPoliceTracker)
 
     lib.notify({
         title = '车辆追踪器',  -- 'Vehicle Tracker'
-        description = '已开始对该车辆:' .. plate .. '的追踪',  -- 'Tracking started for vehicle:' .. plate
+        description = '已开始追踪车辆:' .. plate,  -- 'Tracking started for vehicle:' .. plate
         type = 'success'
     })
     return true
@@ -128,7 +116,7 @@ end
 -- Show input dialog
 local function ShowTrackingUI(isPoliceTracker)
     local input = lib.inputDialog('车辆追踪器', { -- 'Vehicle Tracker'
-        {type = 'input', label = '车牌号', description = '输入要追踪的车辆车牌号(不分大小写)'}, -- label = 'Veh Plate', description = 'Enter the plate number of the vehicle to track (case insensitive)'
+        {type = 'input', label = '车牌号', description = '输入要追踪的车辆车牌号(不区分大小写)'}, -- label = 'Veh Plate', description = 'Enter the plate number of the vehicle to track (case insensitive)'
     })
 
     if not input then return end
@@ -138,8 +126,6 @@ local function ShowTrackingUI(isPoliceTracker)
     end
 end
 
--- 追踪车辆列表
--- Show tracked vehicles list
 local function ShowTrackedVehicles(isPoliceTracker)
     local vehicleList = isPoliceTracker and policeTrackedVehicles or trackedVehicles
     local options = {}
@@ -147,7 +133,7 @@ local function ShowTrackedVehicles(isPoliceTracker)
     for plate, _ in pairs(vehicleList) do
         table.insert(options, {
             title = plate,
-            description = '点击以停止追踪', -- 'Click to stop tracking'
+            description = '点击停止追踪', -- 'Click to stop tracking'
             onSelect = function()
                 RemoveTracking(plate, isPoliceTracker)
             end
@@ -156,8 +142,8 @@ local function ShowTrackedVehicles(isPoliceTracker)
 
     if #options == 0 then
         table.insert(options, {
-            title = '当前无追踪车辆', -- 'No tracked vehicles'
-            description = '请使用车辆追踪器进行追踪', -- 'Use vehicle tracker to track'
+            title = '没有追踪车辆', -- 'No tracked vehicles'
+            description = '使用车辆追踪器追踪', -- 'Use vehicle tracker to track'
         })
     end
 
@@ -170,13 +156,11 @@ local function ShowTrackedVehicles(isPoliceTracker)
     lib.showContext('tracked_vehicles')
 end
 
--- 普通追踪器part
--- normal tracker
 RegisterNetEvent('vehicle_tracker:use', function()
     local options = {
         {
-            title = '追踪车辆', -- 'Track Vehicle'
-            description = '输入要追踪的车辆车牌号(不分大小写)', -- 'Enter the plate number of the vehicle to track (case insensitive)'
+            title = '车辆追踪器', -- 'Track Vehicle'
+            description = '输入要追踪的车辆车牌号(不区分大小写)', -- 'Enter the plate number of the vehicle to track (case insensitive)'
             onSelect = function()
                 ShowTrackingUI(false)
             end
@@ -199,13 +183,11 @@ RegisterNetEvent('vehicle_tracker:use', function()
     lib.showContext('vehicle_tracker_menu')
 end)
 
--- 警用追踪器part
--- police tracker
 RegisterNetEvent('vehicle_tracker:usePolice', function()
     local options = {
         {
-            title = '追踪车辆(警用)',  -- 'Track Vehicle (Police)'
-            description = '输入要追踪的车辆车牌号(不分大小写)', -- 'Enter the plate number of the vehicle to track (case insensitive)'
+            title = '警用车辆追踪器',  -- 'Track Vehicle (Police)'
+            description = '输入要追踪的车辆车牌号(不区分大小写)', -- 'Enter the plate number of the vehicle to track (case insensitive)'
             onSelect = function()
                 ShowTrackingUI(true)
             end
@@ -241,8 +223,6 @@ RegisterNetEvent('vehicle_tracker:syncPoliceTrackers', function(plate, vehicle)
     end
 end)
 
--- 用线程检测blip坐标和检查到期时间
--- Update blips position and check expiration
 CreateThread(function()
     while true do
         local currentGameTime = GetGameTimer()
@@ -258,7 +238,6 @@ CreateThread(function()
             end
         end
         
-        -- 警用追踪part
         -- Update police trackers
         for plate, data in pairs(policeTrackedVehicles) do
             if currentGameTime >= data.expiresAt then
@@ -274,8 +253,6 @@ CreateThread(function()
     end
 end)
 
--- 绘制标记
--- Update blips position and check expiration
 CreateThread(function()
     while true do
         local currentGameTime = GetGameTimer()

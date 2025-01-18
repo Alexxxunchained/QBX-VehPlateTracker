@@ -1,7 +1,6 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local policeTrackedVehicles = {}
 
--- Register usable items
 QBCore.Functions.CreateUseableItem(Config.TrackerItem, function(source)
     TriggerClientEvent('vehicle_tracker:use', source)
 end)
@@ -14,7 +13,7 @@ QBCore.Functions.CreateUseableItem(Config.PoliceTrackerItem, function(source)
     else
         TriggerClientEvent('ox_lib:notify', source, {
             title = '车辆追踪器', -- 'Vehicle Tracker'
-            description = '警用雷达卫星拒绝了您的访问', -- 'Police radar satellite denied your access'
+            description = '警用雷达卫星拒绝你的访问', -- 'Police radar satellite denied your access'
             type = 'error'
         })
     end

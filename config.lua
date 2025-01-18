@@ -5,8 +5,6 @@ Config = {}
 Config.TrackerItem = 'cryptostick'               -- Normal Tracker Item 普通追踪器物品
 Config.PoliceTrackerItem = 'police_tracker'      -- Police Tracker Item 警察追踪器物品
 
--- 追踪设置
--- Tracking config
 Config.MaxTrackingTime = 5 * 60 * 1000 -- 5 minutes in milliseconds    5分钟
 Config.MaxTrackedVehicles = 1           -- Limit of tracked vehicles 最大追踪车辆数
 Config.MaxPoliceTrackedVehicles = 3      -- Limit of police tracked vehicles 最大警察追踪车辆数
